@@ -11,7 +11,45 @@ class FavoritesPage extends StatelessWidget {
     final favorites = context.watch<FavoritesModel>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('รายการโปรดของฉัน')),
+      appBar: AppBar(
+        title: const Text('รายการโปรดของฉัน'),
+        actions: [
+          // แสดงปุ่มล้างทั้งหมด เฉพาะเมื่อมีรายการโปรดอย่างน้อย 1 รายการ
+          if (favorites.items.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_sweep),
+              tooltip: 'ล้างรายการโปรดทั้งหมด',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('ยืนยันการล้างรายการโปรด'),
+                    content: const Text(
+                        'คุณต้องการล้างรายการโปรดทั้งหมดใช่หรือไม่?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        child: const Text('ยกเลิก'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // .read เพราะเป็นการเรียกใช้ฟังก์ชันใน event handler (onPressed)
+                          // ไม่ต้องการให้ตัว callback ทำการฟัง (listen) การเปลี่ยนแปลง
+                          context.read<FavoritesModel>().clear();
+                          Navigator.pop(dialogContext);
+                        },
+                        child: const Text(
+                          'ล้างทั้งหมด',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
       body: favorites.items.isEmpty
           ? const Center(child: Text('ยังไม่มีสินค้าที่บันทึกไว้'))
           : ListView.builder(

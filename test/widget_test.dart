@@ -36,4 +36,42 @@ void main() {
     expect(find.text('ไม่พบสินค้าที่ตรงกับการค้นหา'), findsOneWidget);
     expect(find.text('หนังสือ Calculus มือสอง'), findsNothing);
   });
+
+  testWidgets('Clear all favorites shows dialog and clears items when confirmed', (WidgetTester tester) async {
+    final favoritesModel = FavoritesModel();
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: favoritesModel,
+        child: const MyApp(),
+      ),
+    );
+
+    // Add an item to favorites
+    await tester.tap(find.text('🤍 บันทึกเป็นรายการโปรด').first);
+    await tester.pump();
+    expect(favoritesModel.itemCount, 1);
+
+    // Open Favorites page
+    await tester.tap(find.byIcon(Icons.favorite));
+    await tester.pumpAndSettle();
+
+    // Verify clear button (delete_sweep) is visible
+    expect(find.byIcon(Icons.delete_sweep), findsOneWidget);
+
+    // Tap clear button to show confirmation dialog
+    await tester.tap(find.byIcon(Icons.delete_sweep));
+    await tester.pumpAndSettle();
+
+    // Verify AlertDialog is visible
+    expect(find.text('ยืนยันการล้างรายการโปรด'), findsOneWidget);
+
+    // Tap confirm clear button
+    await tester.tap(find.text('ล้างทั้งหมด'));
+    await tester.pumpAndSettle();
+
+    // Verify favorites list is cleared
+    expect(favoritesModel.itemCount, 0);
+    expect(find.text('ยังไม่มีสินค้าที่บันทึกไว้'), findsOneWidget);
+    expect(find.byIcon(Icons.delete_sweep), findsNothing);
+  });
 }
