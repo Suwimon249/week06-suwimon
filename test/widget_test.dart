@@ -1,30 +1,39 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:provider/provider.dart';
 import 'package:campus_marketplace/main.dart';
+import 'package:campus_marketplace/models/favorites_model.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('Search box filters items case-insensitively', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => FavoritesModel(),
+        child: const MyApp(),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify initial state shows all catalog items
+    expect(find.text('หนังสือ Calculus มือสอง'), findsOneWidget);
+    expect(find.text('หูฟังไร้สาย (สภาพดี 90%)'), findsOneWidget);
+    expect(find.text('โคมไฟตั้งโต๊ะหอพัก'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    // Enter search keyword 'calculus' (lowercase)
+    await tester.enterText(find.byType(TextField), 'calculus');
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify only 'หนังสือ Calculus มือสอง' is shown
+    expect(find.text('หนังสือ Calculus มือสอง'), findsOneWidget);
+    expect(find.text('หูฟังไร้สาย (สภาพดี 90%)'), findsNothing);
+    expect(find.text('โคมไฟตั้งโต๊ะหอพัก'), findsNothing);
+
+    // Enter non-matching search keyword
+    await tester.enterText(find.byType(TextField), 'โน้ตบุ๊ก');
+    await tester.pump();
+
+    // Verify empty search result message is displayed
+    expect(find.text('ไม่พบสินค้าที่ตรงกับการค้นหา'), findsOneWidget);
+    expect(find.text('หนังสือ Calculus มือสอง'), findsNothing);
   });
 }
